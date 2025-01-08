@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -44,21 +43,24 @@ var (
 )
 
 func main() {
-	controlNumber := getControlNumber()
-	uri := fmt.Sprintf("https://iucat.iu.edu/catalog/%s/librarian_view", controlNumber)
-
-	fmt.Println("a" + controlNumber)
-
-	resp, err := http.Get(uri)
+	tcn := getTitleControlNumber()
+	resp, err := http.Get(fmt.Sprintf("https://iucat.iu.edu/catalog/%s/librarian_view", tcn))
 	if err != nil {
-		log.Fatalf("Error fetching item: %s\n", err)
-		return
+		fmt.Println("Error fetching item:", err)
+		os.Exit(1)
 	}
+
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusInternalServerError {
+		fmt.Println("No record found for title control number", tcn)
+		os.Exit(1)
+	}
 
 	body, _ := io.ReadAll(resp.Body)
+	fmt.Println("a" + tcn)
 	if err = parse(body); err != nil {
-		log.Fatalf("Error parsing item: %s\n", err)
+		fmt.Println("Error parsing item:", err)
+		os.Exit(1)
 	}
 }
 
