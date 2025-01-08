@@ -10,11 +10,16 @@ import (
 )
 
 const (
-	id    = "id"
-	class = "class"
+	htmlTag = "html"
+	bodyTag = "body"
 
-	mainContainerID   = "main-container"
-	marcViewID        = "marc_view"
+	idAttr    = "id"
+	classAttr = "class"
+
+	mainContainerID = "main-container"
+	marcViewID      = "marc_view"
+
+	rowClass          = "row"
 	tagIndicatorClass = "tag_ind"
 	tagClass          = "tag"
 	subfieldsClass    = "subfields"
@@ -39,24 +44,27 @@ var (
 	traversalError = errors.New("unable to properly traverse page")
 )
 
-func parse(body []byte) error {
-	page, err := html.Parse(bytes.NewReader(body))
+func parse(responseBody []byte) error {
+	document, err := html.Parse(bytes.NewReader(responseBody))
 	if err != nil {
 		return err
 	}
 
-	// TODO: can you make this a little more reliable/concrete, to ensure we've found body?
-	bodyTag := page.FirstChild.NextSibling.LastChild
-	if bodyTag == nil || bodyTag.Data != "body" {
-		return fmt.Errorf("%w (failed to find body)", traversalError)
+	htmlNode := getFirstChildOfType(document, htmlTag)
+	if htmlNode == nil {
+		return fmt.Errorf("%w (failed to find <%s>)", traversalError, htmlTag)
 	}
-	mainContainer := getFirstChildWithAttr(bodyTag, id, mainContainerID)
+	body := getFirstChildOfType(htmlNode, bodyTag)
+	if body == nil {
+		return fmt.Errorf("%w (failed to find <%s>)", traversalError, bodyTag)
+	}
+	mainContainer := getFirstChildWithAttr(body, idAttr, mainContainerID)
 	if mainContainer == nil {
 		return fmt.Errorf("%w (failed to find %s)", traversalError, mainContainerID)
 	}
 
-	table := mainContainer.LastChild.PrevSibling // Should be the table; can we make this more concrete?
-	rows := getFirstChildWithAttr(table, id, marcViewID)
+	table := getLastChildWithAttr(mainContainer, classAttr, rowClass)
+	rows := getFirstChildWithAttr(table, idAttr, marcViewID)
 	if rows == nil {
 		return fmt.Errorf("%w (failed to find %s)", traversalError, marcViewID)
 	}
@@ -66,11 +74,20 @@ func parse(body []byte) error {
 			continue
 		}
 
-		if v := getFirstChildWithAttr(row, class, subfieldsClass); v != nil {
+		if v := getFirstChildWithAttr(row, classAttr, subfieldsClass); v != nil {
 			fmt.Println(getSubfieldsAsString(v))
 		}
 	}
 
+	return nil
+}
+
+func getFirstChildOfType(n *html.Node, tagName string) *html.Node {
+	for node := range n.ChildNodes() {
+		if node.Type == html.ElementNode && node.Data == tagName {
+			return node
+		}
+	}
 	return nil
 }
 
@@ -88,12 +105,27 @@ func getFirstChildWithAttr(n *html.Node, attrName, attrValue string) *html.Node 
 	return nil
 }
 
+func getLastChildWithAttr(n *html.Node, attrName, attrValue string) *html.Node {
+	if n == nil {
+		return nil
+	}
+	var rtn *html.Node
+	for n = range n.ChildNodes() {
+		for _, attr := range n.Attr {
+			if attr.Key == attrName && attr.Val == attrValue {
+				rtn = n
+			}
+		}
+	}
+	return rtn
+}
+
 func rowIsWanted(n *html.Node) bool {
-	tagIndicator := getFirstChildWithAttr(n, class, tagIndicatorClass)
+	tagIndicator := getFirstChildWithAttr(n, classAttr, tagIndicatorClass)
 	if tagIndicator == nil {
 		return false
 	}
-	tag := getFirstChildWithAttr(tagIndicator, class, tagClass)
+	tag := getFirstChildWithAttr(tagIndicator, classAttr, tagClass)
 	if tag == nil {
 		return false
 	}
@@ -111,10 +143,10 @@ func rowIsWanted(n *html.Node) bool {
 }
 
 func subfieldsContains5Pipe(n *html.Node) bool {
-	n = getFirstChildWithAttr(n, class, subfieldsClass)
+	n = getFirstChildWithAttr(n, classAttr, subfieldsClass)
 	for child := range n.ChildNodes() {
 		for _, a := range child.Attr {
-			if a.Key == class && a.Val == subCodeClass && child.FirstChild.Data == "5|" {
+			if a.Key == classAttr && a.Val == subCodeClass && child.FirstChild.Data == "5|" {
 				return true
 			}
 		}
@@ -122,23 +154,24 @@ func subfieldsContains5Pipe(n *html.Node) bool {
 	return false
 }
 
-func getSubfieldsAsString(n *html.Node) (subfields string) {
+func getSubfieldsAsString(n *html.Node) string {
 	if n == nil {
 		return ""
 	}
+	rtn := ""
 	for n = range n.ChildNodes() {
-		if n.Data == "span" {
-			if n.FirstChild.Data == "5|" {
-				break // We don't want any text after the 5| delimiter
+		if n.Type == html.ElementNode {
+			if n.Data == "span" && n.FirstChild.Data == "5|" {
+				return rtn // We don't want any text after the 5| delimiter
 			}
 			continue
 		}
 		if text := strings.TrimSpace(n.Data); text != "" && text != "UNAUTHORIZED" {
-			if subfields != "" {
-				subfields += " "
+			if rtn != "" {
+				rtn += " "
 			}
-			subfields += text
+			rtn += text
 		}
 	}
-	return
+	return rtn
 }
