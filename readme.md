@@ -1,11 +1,12 @@
 # Catalogue Card Scraper
-This catalogue card scraper is meant for Indiana University cataloguers to quickly generate catalogue cards to be
-printed and filed as a redundancy for the electronic system. It pulls from the Indiana University [online catalogue](https://iucat.iu.edu/catalog),
-on any given item's [Librarian View page](https://iucat.iu.edu/catalog/19858379/librarian_view), generating a card with
-the following fields:
+This catalogue card scraper was written for Indiana University cataloguers, to quickly generate catalogue cards to be
+printed and filed as a redundancy for the electronic system. It pulls from the Indiana University
+[online catalogue](https://iucat.iu.edu/catalog), on any given item's
+[Librarian View page](https://iucat.iu.edu/catalog/19858379/librarian_view), generating a card with the following fields:
 - 090
 - 100
 - 240
+- 245
 - 260
 - 264
 - 300
@@ -16,7 +17,11 @@ the following fields:
 
 ## Usage
 
-`$ ./catalogue-card-scraper 20972946` should print
+`$ go build .` to get the binary.
+
+Provide a title control number as the first argument, e.g.:
+
+`$ ./catalogue-card-scraper a20972946` should print
 ```
 a20972946
 M312.4 .G35 op.1, no.7-12 (1757)
@@ -29,7 +34,7 @@ Sewn in modern ivory wrappers; laid in half tan calf clamshell with marbled boar
 BY: J&J Lubrano 10-28-24 $3500 law
 ```
 
-`$ ./catalogue-card-scraper 19858379` should print
+`$ ./catalogue-card-scraper a19858379` should print
 ```
 a19858379
 PS3563.E747 S75 1995
@@ -42,3 +47,4 @@ BY: Barbara Mertz library Quill & Brush en bloc 2017 law
 Mertz, Barbara, former owner. InU ^A970484
 ```
 
+The "a" prefix on the title control number is optional.
