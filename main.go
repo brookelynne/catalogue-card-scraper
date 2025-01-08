@@ -64,17 +64,41 @@ func main() {
 	}
 }
 
-func getControlNumber() string {
+func getTitleControlNumber() string {
 	args := os.Args
 	if len(args) < 2 {
-		// TODO: TEST MODE ONLY
-		//return "20972946"
-		//return "19858379"
-		log.Fatal("Missing control number; please supply a control number after the program, example:\n" +
-			"./catalogue-card-scraper 19858379")
-
+		fmt.Print(getHelpText())
+		os.Exit(1)
 	}
-	return args[1]
+	if args[1] == "help" || args[1] == "-h" || args[1] == "--help" {
+		fmt.Print(getHelpText())
+		os.Exit(0)
+	}
+	tcn := args[1]
+	// title control numbers begin with a lower-case 'a'; we'll strip that for use in the URL
+	if tcn[0] == 'a' {
+		tcn = tcn[1:]
+	}
+	return tcn
+}
+
+func getHelpText() string {
+	return `Missing title control number. Please supply a title control number after the program name, example:
+    catalogue-card-scraper.exe a19858379
+The "a" prefix on the title control number is optional.
+For help or change requests, please email brooke.weaver@gmail.com
+
+             .--.           .---.        .-.
+         .---|--|   .-.     | L |  .---. |~|    .--.
+      .--|===|  |---|_|--.__| I |--|:::| |~|-==-|==|---.
+      |%%|RDA|  |===| |~~|%%| L |--|   |_|~|CATS|  |___|-.
+      |  |   |  |===| |==|  | L |  |:::|=| |    |BX|---|=|
+      |  |   |  |   |_|__|  | Y |__|   | | |    |  |___| |
+      |~~|===|--|===|~|~~|%%|~~~|--|:::|=|~|----|==|---|=|
+      ^--^---'--^---^-^--^--^---'--^---^-^-^-==-^--^---^-'
+
+`
+	// ASCII art credit: https://www.asciiart.eu/books/books
 }
 
 func parse(body []byte) error {
