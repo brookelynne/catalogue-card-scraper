@@ -110,17 +110,17 @@ func parse(body []byte) error {
 	// TODO: can you make this a little more reliable/concrete, to ensure we've found body?
 	bodyTag := page.FirstChild.NextSibling.LastChild
 	if bodyTag == nil || bodyTag.Data != "body" {
-		return fmt.Errorf("%e (failed to find body)", traversalError)
+		return fmt.Errorf("%w (failed to find body)", traversalError)
 	}
 	mainContainer := getFirstChildWithAttr(bodyTag, id, mainContainerID)
 	if mainContainer == nil {
-		return fmt.Errorf("%e (failed to find %s)", traversalError, mainContainerID)
+		return fmt.Errorf("%w (failed to find %s)", traversalError, mainContainerID)
 	}
 
 	table := mainContainer.LastChild.PrevSibling // Should be the table; can we make this more concrete?
 	rows := getFirstChildWithAttr(table, id, marcViewID)
 	if rows == nil {
-		return fmt.Errorf("%e (failed to find %s)", traversalError, marcViewID)
+		return fmt.Errorf("%w (failed to find %s)", traversalError, marcViewID)
 	}
 
 	for row := range rows.ChildNodes() {
