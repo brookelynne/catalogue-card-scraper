@@ -190,6 +190,9 @@ func getSubfieldsAsString(n *html.Node) (subfields string) {
 	}
 	for n = range n.ChildNodes() {
 		if n.Data == "span" {
+			if n.FirstChild.Data == "5|" {
+				break // We don't want any text after the 5| delimiter
+			}
 			continue
 		}
 		if text := strings.TrimSpace(n.Data); text != "" && text != "UNAUTHORIZED" {
