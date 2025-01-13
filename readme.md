@@ -22,11 +22,13 @@ printed and filed as a redundancy for the electronic system. It pulls from the I
 Provide a title control number as the first argument, e.g.:
 
 `$ ./catalogue-card-scraper a20972946` should print
+
 ```
 a20972946
 M312.4 .G35 op.1, no.7-12 (1757)
 Geminiani, Francesco, 1687-1762, composer.
 Sonatas, violins (2), continuo, no. 7-12 (1757)
+VI sonatas for two violins & a violoncello or harpsichord ; with a repieno [sic] bass, to be used when the violins are doubled / composed by F. Geminiani, from the VI last solos of his opa. 1a, with a few additional movements.
 London : Printed for the author by J. Johnson, [1757]
 4 parts ; 33 cm
 With Geminiani's signature on title-page of each part, and with former owner signature ("R Lukyn") on cello part.
@@ -35,16 +37,18 @@ BY: J&J Lubrano 10-28-24 $3500 law
 ```
 
 `$ ./catalogue-card-scraper a19858379` should print
+
 ```
 a19858379
 PS3563.E747 S75 1995
 Michaels, Barbara, 1927-2013. ^A101009
+Stitches in time / Barbara Michaels.
 London : Piatkus, 1995.
 307 pages ; 25 cm
-From the library of Barbara Mertz, with bookplate. InU
+From the library of Barbara Mertz, with bookplate.
 In red boards with dark, illustrated dust jacket.
 BY: Barbara Mertz library Quill & Brush en bloc 2017 law
-Mertz, Barbara, former owner. InU ^A970484
+Mertz, Barbara, former owner.
 ```
 
 The "a" prefix on the title control number is optional.
