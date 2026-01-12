@@ -19,7 +19,7 @@ const (
 	mainContainerID = "main-container"
 	marcViewID      = "marc_view"
 
-	rowClass          = "row"
+	fieldClass        = "field"
 	tagIndicatorClass = "tag_ind"
 	tagClass          = "tag"
 	subfieldsClass    = "subfields"
@@ -63,18 +63,17 @@ func parse(responseBody []byte) error {
 		return fmt.Errorf("%w (failed to find %s)", traversalError, mainContainerID)
 	}
 
-	table := getLastChildWithAttr(mainContainer, classAttr, rowClass)
-	rows := getFirstChildWithAttr(table, idAttr, marcViewID)
-	if rows == nil {
+	marcView := getDescendantWithAttr(mainContainer, idAttr, marcViewID)
+	if marcView == nil {
 		return fmt.Errorf("%w (failed to find %s)", traversalError, marcViewID)
 	}
 
-	for row := range rows.ChildNodes() {
-		if !rowIsWanted(row) {
+	for field := range marcView.ChildNodes() {
+		if !fieldIsWanted(field) {
 			continue
 		}
 
-		if v := getFirstChildWithAttr(row, classAttr, subfieldsClass); v != nil {
+		if v := getFirstChildWithAttr(field, classAttr, subfieldsClass); v != nil {
 			fmt.Println(getSubfieldsAsString(v))
 		}
 	}
@@ -105,22 +104,26 @@ func getFirstChildWithAttr(n *html.Node, attrName, attrValue string) *html.Node 
 	return nil
 }
 
-func getLastChildWithAttr(n *html.Node, attrName, attrValue string) *html.Node {
+func getDescendantWithAttr(n *html.Node, attrName, attrValue string) *html.Node {
 	if n == nil {
 		return nil
 	}
-	var rtn *html.Node
-	for n = range n.ChildNodes() {
-		for _, attr := range n.Attr {
-			if attr.Key == attrName && attr.Val == attrValue {
-				rtn = n
-			}
+	// Check if current node matches
+	for _, attr := range n.Attr {
+		if attr.Key == attrName && attr.Val == attrValue {
+			return n
 		}
 	}
-	return rtn
+	// Recursively check children
+	for child := range n.ChildNodes() {
+		if result := getDescendantWithAttr(child, attrName, attrValue); result != nil {
+			return result
+		}
+	}
+	return nil
 }
 
-func rowIsWanted(n *html.Node) bool {
+func fieldIsWanted(n *html.Node) bool {
 	tagIndicator := getFirstChildWithAttr(n, classAttr, tagIndicatorClass)
 	if tagIndicator == nil {
 		return false
